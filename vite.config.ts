@@ -13,27 +13,27 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://185.203.237.55:8085',
+        target: 'http://10.252.56.105:8080',
         changeOrigin: true,
         secure: false,
       },
       '/auth': {
-        target: 'http://185.203.237.55:8085',
+        target: '',
         changeOrigin: true,
         secure: false,
       },
       '/admin': {
-        target: 'http://185.203.237.55:8085',
+        target: 'http://10.252.56.105:8080',
         changeOrigin: true,
         secure: false,
       },
       '/super-admin': {
-        target: 'http://185.203.237.55:8085',
+        target: 'http://10.252.56.105:8080',
         changeOrigin: true,
         secure: false,
       },
       '/user': {
-        target: 'http://185.203.237.55:8085',
+        target: 'http://10.252.56.105:8080',
         changeOrigin: true,
         secure: false,
       },

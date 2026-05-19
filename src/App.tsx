@@ -16,6 +16,7 @@ import SpecializationsPage from './pages/specializations/SpecializationsPage'
 import UsersPage from './pages/users/UsersPage'
 import ExcelImportPage from './pages/excel/ExcelImportPage'
 import SettingsPage from './pages/settings/SettingsPage'
+import ReportsPage from './pages/reports/ReportsPage'
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth()
@@ -51,6 +52,7 @@ const AppRoutes: React.FC = () => {
         <Route path="users" element={<UsersPage />} />
         <Route path="excel-import" element={<ExcelImportPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="reports" element={<ReportsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

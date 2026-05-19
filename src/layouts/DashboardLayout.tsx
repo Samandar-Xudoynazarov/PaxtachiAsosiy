@@ -4,7 +4,7 @@ import { useAuth } from '../utils/AuthContext'
 import {
   LayoutDashboard, Users, Map, FileText, Tractor, Droplets,
   Flower2, UserCheck, MapPin, Award, UserCog, FileSpreadsheet,
-  Settings, LogOut, Leaf, Menu, X, Bell, ChevronRight,
+  Settings, LogOut, Leaf, Menu, X, Bell, ChevronRight, ClipboardList,
 } from 'lucide-react'
 import { getInitials } from '../utils/helpers'
 
@@ -27,6 +27,7 @@ const navItems: NavItem[] = [
   { path: '/specializations', label: 'Ixtisosliklar', icon: <Award size={18} /> },
   { path: '/users', label: 'Foydalanuvchilar', icon: <UserCog size={18} /> },
   { path: '/excel-import', label: 'Excel import', icon: <FileSpreadsheet size={18} /> },
+  { path: '/reports', label: 'Hisobotlar va Buyruqlar', icon: <ClipboardList size={18} /> },
   { path: '/settings', label: 'Sozlamalar', icon: <Settings size={18} /> },
 ]
 

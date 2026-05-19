@@ -114,10 +114,9 @@ const FarmerDetail: React.FC<{ farmer: Farmer }> = ({ farmer }) => {
       setCadastreLoading(true)
       cadastreApi.getAll({ size: 10000 }).then(res => {
         const all: CadastreRecord[] = Array.isArray(res.data) ? res.data : res.data?.content ?? []
-        setCadastre(all.filter(r =>
-          (farmerNameLower && r.farmName?.toLowerCase().includes(farmerNameLower)) ||
-          (farmer.cadastralNumber && r.cadastreNumber === farmer.cadastralNumber)
-        ))
+        // cadastreNumber (6-part) and farmer.cadastralNumber (3-part) use different formats
+        // No reliable match possible — backend needs stir field in cadastre entity
+        setCadastre(all.filter(() => false))
       }).catch(() => setCadastre([])).finally(() => setCadastreLoading(false))
     }
 
@@ -125,10 +124,9 @@ const FarmerDetail: React.FC<{ farmer: Farmer }> = ({ farmer }) => {
       setGhLoading(true)
       greenhouseApi.getAll({ size: 10000 }).then(res => {
         const all: GreenhouseRecord[] = Array.isArray(res.data) ? res.data : res.data?.content ?? []
-        setGreenhouse(all.filter(r =>
-          (farmerNameLower && r.ownerName?.toLowerCase().includes(farmerNameLower)) ||
-          (farmerStir && r.jshshir === farmerStir)
-        ))
+        // Greenhouse uses jshshir (14-digit personal ID), farmer uses stir (9-digit legal ID)
+        // No direct link possible — show empty
+        setGreenhouse(all.filter(() => false))
       }).catch(() => setGreenhouse([])).finally(() => setGhLoading(false))
     }
 
@@ -136,10 +134,13 @@ const FarmerDetail: React.FC<{ farmer: Farmer }> = ({ farmer }) => {
       setReprsLoading(true)
       representativesApi.getAll({ size: 10000 }).then(res => {
         const all: FarmRepresentative[] = Array.isArray(res.data) ? res.data : res.data?.content ?? []
-        setReprs(all.filter(r =>
-          (farmerNameLower && r.farmName?.toLowerCase().includes(farmerNameLower)) ||
-          (farmerStir && r.inn === farmerStir)
-        ))
+        // Link: representative.inn === farmer.stir
+        const stirStr = farmerStir.trim()
+        setReprs(
+          stirStr
+            ? all.filter(r => String(r.inn ?? '').trim() === stirStr)
+            : []
+        )
       }).catch(() => setReprs([])).finally(() => setReprsLoading(false))
     }
 
@@ -147,13 +148,16 @@ const FarmerDetail: React.FC<{ farmer: Farmer }> = ({ farmer }) => {
       setAgroLoading(true)
       agroTechnicsApi.getAll({ size: 10000 }).then(res => {
         const all: AgroTechnic[] = Array.isArray(res.data) ? res.data : res.data?.content ?? []
-        setAgro(all.filter(r =>
-          (farmerNameLower && r.ownerName?.toLowerCase().includes(farmerNameLower)) ||
-          (farmerStir && r.inn === farmerStir)
-        ))
+        // Link: agro.inn === farmer.stir
+        const stirStr = farmerStir.trim()
+        setAgro(
+          stirStr
+            ? all.filter(r => String(r.inn ?? '').trim() === stirStr)
+            : []
+        )
       }).catch(() => setAgro([])).finally(() => setAgroLoading(false))
     }
-  }, [farmer, cadastre, greenhouse, reprs, agro, cadastreLoading, ghLoading, reprsLoading, agroLoading, farmerNameLower, farmerStir])
+  }, [farmer, cadastre, greenhouse, reprs, agro, cadastreLoading, ghLoading, reprsLoading, agroLoading, farmerStir])
 
   // ── Info tab helpers ─────────────────────────────────────────────
   const get = (key: keyof Farmer) => (farmer[key] as number | null) ?? 0
@@ -326,6 +330,13 @@ const FarmerDetail: React.FC<{ farmer: Farmer }> = ({ farmer }) => {
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
             Bog'liq kadastr yozuvlari
           </p>
+          {!cadastreLoading && (
+            <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 mb-3">
+              <p className="text-xs text-amber-700 font-medium">
+                Fermer kadastr raqami (<span className="font-mono">{farmer.cadastralNumber || '—'}</span>) va kadastr bazasi formati mos kelmaydi — backend kadastr yozuviga STIR field qo'shilsa bog'lash mumkin bo'ladi.
+              </p>
+            </div>
+          )}
           {cadastreLoading && <Skeleton />}
           {!cadastreLoading && cadastre !== null && cadastre.length === 0 && (
             <EmptyTab label="Kadastr" />
@@ -374,6 +385,13 @@ const FarmerDetail: React.FC<{ farmer: Farmer }> = ({ farmer }) => {
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
             Bog'liq issiqxona yozuvlari
           </p>
+          {!ghLoading && (
+            <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 mb-3">
+              <p className="text-xs text-amber-700 font-medium">
+                Issiqxona yozuvlari shaxsiy ID (JShShIR) bilan bog'langan — fermer STIR bilan to'g'ridan bog'lash mumkin emas.
+              </p>
+            </div>
+          )}
           {ghLoading && <Skeleton />}
           {!ghLoading && greenhouse !== null && greenhouse.length === 0 && (
             <EmptyTab label="Issiqxona" />
@@ -466,14 +484,14 @@ const FarmerDetail: React.FC<{ farmer: Farmer }> = ({ farmer }) => {
                     <span>{r.technicType || '—'}</span>
                     <span className="font-semibold text-slate-700">{r.model || '—'}</span>
                   </div>
-                  {r.inn && (
+                  {r.inn != null && (
                     <div className="flex items-center gap-1">
                       <span className="text-xs text-slate-400">INN:</span>
                       <button
-                        onClick={() => navigate(`/farmers?q=${r.inn}`)}
+                        onClick={() => navigate(`/farmers?q=${String(r.inn).trim()}`)}
                         className="text-xs font-semibold text-primary-600 hover:underline flex items-center gap-0.5"
                       >
-                        {r.inn} <ExternalLink size={10} />
+                        {String(r.inn)} <ExternalLink size={10} />
                       </button>
                     </div>
                   )}

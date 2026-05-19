@@ -4,6 +4,7 @@ import type { AxiosResponse } from 'axios'
 interface UseCrudOptions<T> {
   fetchFn: (params?: Record<string, unknown>) => Promise<AxiosResponse>
   pageSize?: number
+  filterFn?: (item: T, q: string) => boolean
 }
 
 interface UseCrudReturn<T> {
@@ -19,7 +20,8 @@ interface UseCrudReturn<T> {
   refetch: () => void
 }
 
-function localFilter<T>(items: T[], q: string): T[] {
+function localFilter<T>(items: T[], q: string, filterFn?: (item: T, q: string) => boolean): T[] {
+  if (filterFn) return items.filter(item => filterFn(item, q))
   return items.filter(item =>
     Object.values(item as Record<string, unknown>).some(v =>
       typeof v === 'string' && v.toLowerCase().includes(q)
@@ -27,7 +29,7 @@ function localFilter<T>(items: T[], q: string): T[] {
   )
 }
 
-export function useCrud<T>({ fetchFn, pageSize = 10 }: UseCrudOptions<T>): UseCrudReturn<T> {
+export function useCrud<T>({ fetchFn, pageSize = 10, filterFn }: UseCrudOptions<T>): UseCrudReturn<T> {
   const [allItems, setAllItems] = useState<T[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -52,10 +54,13 @@ export function useCrud<T>({ fetchFn, pageSize = 10 }: UseCrudOptions<T>): UseCr
         const res = await fetchFn({ page: 0, size: 10000 })
         if (cancelled) return
         const d = res.data
-        if (Array.isArray(d))  setAllItems(d)
-        else if (d?.content)   setAllItems(d.content)
-        else if (d?.items)     setAllItems(d.items)
-        else                   setAllItems(d ? [d] : [])
+        let items: T[] = []
+        if (Array.isArray(d))        items = d
+        else if (d?.content)         items = d.content
+        else if (d?.items)           items = d.items
+        else if (d?.page?.content)   items = d.page.content
+        else                         items = d ? [d] : []
+        setAllItems(items)
       } catch {
         if (!cancelled) {
           setError("Ma'lumotlarni yuklashda xatolik yuz berdi")
@@ -73,8 +78,8 @@ export function useCrud<T>({ fetchFn, pageSize = 10 }: UseCrudOptions<T>): UseCr
 
   const filteredItems = useMemo(() => {
     if (!search.trim()) return allItems
-    return localFilter(allItems, search.toLowerCase())
-  }, [allItems, search])
+    return localFilter(allItems, search.toLowerCase(), filterFn)
+  }, [allItems, search, filterFn])
 
   const data = useMemo(
     () => filteredItems.slice(page * pageSize, (page + 1) * pageSize),

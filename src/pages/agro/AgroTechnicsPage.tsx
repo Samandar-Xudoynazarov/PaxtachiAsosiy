@@ -26,7 +26,24 @@ const empty: Partial<AgroTechnic> = {
 const AgroTechnicsPage: React.FC = () => {
   const [searchParams] = useSearchParams()
   const { data, loading, error, page, totalPages, search, setSearch, setPage, refetch } =
-    useCrud<AgroTechnic>({ fetchFn: agroTechnicsApi.getAll })
+    useCrud<AgroTechnic>({
+      fetchFn: agroTechnicsApi.getAll,
+      filterFn: (item, q) => {
+        const qt = q.trim()
+        const inn = String(item.inn ?? '').trim()
+        return (
+          (!!inn && inn.includes(qt)) ||
+          item.ownerName?.toLowerCase().includes(qt) ||
+          item.model?.toLowerCase().includes(qt) ||
+          item.technicType?.toLowerCase().includes(qt) ||
+          item.ownershipType?.toLowerCase().includes(qt) ||
+          item.district?.toLowerCase().includes(qt) ||
+          item.engineNumber?.toLowerCase().includes(qt) ||
+          item.chassisNumber?.toLowerCase().includes(qt) ||
+          false
+        )
+      },
+    })
 
   useEffect(() => { const q = searchParams.get('q'); if (q) setSearch(q) }, [])
 
